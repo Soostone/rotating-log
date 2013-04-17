@@ -44,9 +44,9 @@ mkRotatingLog pre limit = do
 ------------------------------------------------------------------------------
 -- | Like "rotatedWrite'", but doesn't need a UTCTime.
 rotatedWrite :: RotatingLog -> ByteString -> IO ()
-rotatedWrite log bs = do
+rotatedWrite rlog bs = do
     t <- getCurrentTime
-    rotatedWrite log t bs
+    rotatedWrite' rlog t bs
 
 ------------------------------------------------------------------------------
 -- | Writes ByteString to a rotating log file.  If this write would exceed the
