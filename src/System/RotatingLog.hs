@@ -4,6 +4,7 @@ module System.RotatingLog
   ( RotatingLog
   , mkRotatingLog
   , rotatedWrite
+  , rotatedWrite'
   ) where
 
 import           Control.Concurrent.MVar
