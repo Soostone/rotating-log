@@ -1,19 +1,32 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module System.RotatingLog
-  ( RotatingLog
+  (
+
+  -- * Core API
+
+    RotatingLog
   , mkRotatingLog
   , rotatedWrite
   , rotatedWrite'
+
+  -- * Built-In Post-Rotate Actions
+  , archiveFile
+
   ) where
 
+-------------------------------------------------------------------------------
 import           Control.Concurrent.MVar
 import           Data.ByteString.Char8   (ByteString)
 import qualified Data.ByteString.Char8   as B
 import           Data.Time
 import           Data.Word
+import           System.Directory
+import           System.FilePath.Posix
 import           System.IO
 import           System.Locale
+-------------------------------------------------------------------------------
+
 
 ------------------------------------------------------------------------------
 -- | A size-limited rotating log.  Log filenames are of the format
@@ -74,6 +87,21 @@ rotatedWrite' RotatingLog{..} t bs = do
     len = fromIntegral $ B.length bs + 1
 
 
+
+
+-------------------------------------------------------------------------------
+-- | A built-in post-rotate action that moves the finished file to an
+-- archive location.
+archiveFile
+    :: FilePath
+    -- ^ A target archive directory
+    -> (FilePath -> IO ())
+archiveFile fp archive =
+    let (dir, fn) = splitFileName fp
+        target = archive </> fn
+    in do
+        createDirectoryIfMissing True archive
+        renameFile fp target
 
 
 
