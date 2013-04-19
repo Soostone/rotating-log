@@ -13,7 +13,7 @@ thread log pre n = do
     thread log pre (n+1)
 
 main = do
-    log <- mkRotatingLog "foo" 1000000 (const $ return ())
+    log <- mkRotatingLog "foo" 1000000 (archiveFile "logs")
     a <- forkIO $ thread log "a" 0
     b <- forkIO $ thread log "b" 0
     c <- forkIO $ thread log "c" 0

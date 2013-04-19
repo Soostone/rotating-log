@@ -48,7 +48,7 @@ data LogInfo = LogInfo
 
 logFileName :: String -> UTCTime -> FilePath
 logFileName pre t = concat
-    [pre, "_", formatTime defaultTimeLocale "%F_%T%Q" t, ".log"]
+    [pre, "_", formatTime defaultTimeLocale "%Y_%m_%d_%H_%M_%S.%Q" t, ".log"]
 
 ------------------------------------------------------------------------------
 -- | Creates a rotating log given a prefix and size limit in bytes.
@@ -103,7 +103,7 @@ archiveFile
     :: FilePath
     -- ^ A target archive directory
     -> (FilePath -> IO ())
-archiveFile fp archive =
+archiveFile archive fp =
     let (dir, fn) = splitFileName fp
         target = archive </> fn
     in do
