@@ -52,7 +52,14 @@ logFileName pre t = concat
 
 ------------------------------------------------------------------------------
 -- | Creates a rotating log given a prefix and size limit in bytes.
-mkRotatingLog :: String -> Word64 -> (FilePath -> IO ()) -> IO RotatingLog
+mkRotatingLog
+    :: String
+    -- ^ A prefix for the written log files
+    -> Word64
+    -- ^ A size limit in bytes
+    -> (FilePath -> IO ())
+    -- ^ A post-rotate action to be run on the finalized file.
+    -> IO RotatingLog
 mkRotatingLog pre limit pa = do
     t <- getCurrentTime
     let fp = logFileName pre t
