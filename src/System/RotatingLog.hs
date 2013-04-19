@@ -8,8 +8,8 @@ module System.RotatingLog
   ) where
 
 import           Control.Concurrent.MVar
-import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as B
+import           Data.ByteString.Char8   (ByteString)
+import qualified Data.ByteString.Char8   as B
 import           Data.Time
 import           Data.Word
 import           System.IO
@@ -22,10 +22,14 @@ data RotatingLog = RotatingLog
     { logInfo    :: MVar LogInfo
     , namePrefix :: String
     , sizeLimit  :: Word64
+    , postAction :: FilePath -> IO ()
+    -- ^ An action to be performed on the finished file after
+    -- rotation.
     }
 
 data LogInfo = LogInfo
     { curHandle    :: Handle
+    , curFile      :: FilePath
     , bytesWritten :: !Word64
     }
 
@@ -35,12 +39,13 @@ logFileName pre t = concat
 
 ------------------------------------------------------------------------------
 -- | Creates a rotating log given a prefix and size limit in bytes.
-mkRotatingLog :: String -> Word64 -> IO RotatingLog
-mkRotatingLog pre limit = do
+mkRotatingLog :: String -> Word64 -> (FilePath -> IO ()) -> IO RotatingLog
+mkRotatingLog pre limit pa = do
     t <- getCurrentTime
-    h <- openFile (logFileName pre t) AppendMode
-    mvar <- newMVar $ LogInfo h 0
-    return $ RotatingLog mvar pre limit
+    let fp = logFileName pre t
+    h <- openFile fp AppendMode
+    mvar <- newMVar $ LogInfo h fp 0
+    return $ RotatingLog mvar pre limit pa
 
 ------------------------------------------------------------------------------
 -- | Like "rotatedWrite'", but doesn't need a UTCTime.
@@ -55,14 +60,20 @@ rotatedWrite rlog bs = do
 -- takes a UTCTime to allow a cached time to be used to avoid a system call.
 rotatedWrite' :: RotatingLog -> UTCTime -> ByteString -> IO ()
 rotatedWrite' RotatingLog{..} t bs = do
-    modifyMVar_ logInfo $ \LogInfo{..} -> do
-        (h,b) <- if bytesWritten + len > sizeLimit
+    modifyMVar_ logInfo $ \li@LogInfo{..} -> do
+        (h,fp,b) <- if bytesWritten + len > sizeLimit
                    then do hClose curHandle
-                           h <- openFile (logFileName namePrefix t) AppendMode
-                           return (h,0)
-                   else return (curHandle, bytesWritten)
+                           postAction curFile
+                           let fp = logFileName namePrefix t
+                           h <- openFile fp AppendMode
+                           return (h,fp, 0)
+                   else return (curHandle, curFile, bytesWritten)
         B.hPutStrLn h bs
-        return $ LogInfo h (b+len)
+        return $! LogInfo h fp (len + b)
   where
     len = fromIntegral $ B.length bs + 1
+
+
+
+
 
