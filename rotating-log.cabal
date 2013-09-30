@@ -28,8 +28,10 @@ library
 
   ghc-options: -Wall -fwarn-tabs
 
-executable test-rotate
+test-suite test-rotate
+  type: exitcode-stdio-1.0                            
   main-is: TestRotate.hs
+  ghc-options: -Wall
   hs-source-dirs: test, src
   build-depends:
     base               >= 4    && < 5,
