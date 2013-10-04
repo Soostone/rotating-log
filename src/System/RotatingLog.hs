@@ -1,10 +1,21 @@
 {-# LANGUAGE RecordWildCards #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  System.RotatingLog
+-- Copyright   :  Soostone Inc
+-- License     :  BSD3
+--
+-- Maintainer  :  admin@soostone.com
+-- Stability   :  experimental
+--
+-- Convenient logging to a disk-based log file with automatic file
+-- rotation based on size.
+----------------------------------------------------------------------------
 
 module System.RotatingLog
   (
 
   -- * Core API
-
     RotatingLog
   , mkRotatingLog
   , rotatedWrite
@@ -36,8 +47,6 @@ data RotatingLog = RotatingLog
     , namePrefix :: String
     , sizeLimit  :: Word64
     , postAction :: FilePath -> IO ()
-    -- ^ An action to be performed on the finished file after
-    -- rotation.
     }
 
 
@@ -60,11 +69,13 @@ logFileName pre t = concat
 -- | Creates a rotating log given a prefix and size limit in bytes.
 mkRotatingLog
     :: String
-    -- ^ A prefix for the written log files
+    -- ^ A prefix for the written log files.
     -> Word64
-    -- ^ A size limit in bytes
+    -- ^ A size limit in bytes.
     -> (FilePath -> IO ())
-    -- ^ A post-rotate action to be run on the finalized file.
+    -- ^ An action to be performed on the finished file following
+    -- rotation. For example, you could give a callback that moves or
+    -- ships the files somewhere else.
     -> IO RotatingLog
 mkRotatingLog pre limit pa = do
     let fp = curLogFileName pre
@@ -75,7 +86,8 @@ mkRotatingLog pre limit pa = do
 
 
 ------------------------------------------------------------------------------
--- | Like "rotatedWrite'", but doesn't need a UTCTime.
+-- | Like "rotatedWrite'", but doesn't need a UTCTime and obtains it
+-- with a syscall.
 rotatedWrite :: RotatingLog -> ByteString -> IO ()
 rotatedWrite rlog bs = do
     t <- getCurrentTime
@@ -86,6 +98,11 @@ rotatedWrite rlog bs = do
 -- | Writes ByteString to a rotating log file.  If this write would exceed the
 -- size limit, then the file is closed and a new file opened.  This function
 -- takes a UTCTime to allow a cached time to be used to avoid a system call.
+--
+-- Please note this function does NOT implicitly insert a newline at
+-- the end of the string you provide. This is so that it can be used
+-- to log non-textual streams such as binary serialized or compressed
+-- content.
 rotatedWrite' :: RotatingLog -> UTCTime -> ByteString -> IO ()
 rotatedWrite' RotatingLog{..} t bs = do
     modifyMVar_ logInfo $ \LogInfo{..} -> do
@@ -105,8 +122,8 @@ rotatedWrite' RotatingLog{..} t bs = do
 
 
 -------------------------------------------------------------------------------
--- | A built-in post-rotate action that moves the finished file to an
--- archive location.
+-- | A built-in post-rotate action that moves the finished file to a
+-- given archive location.
 archiveFile
     :: FilePath
     -- ^ A target archive directory
