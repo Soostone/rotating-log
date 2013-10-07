@@ -4,3 +4,4 @@ dist
 *.o
 TAGS
 *DS_*
+*.log
