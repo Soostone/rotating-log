@@ -46,6 +46,7 @@ data RotatingLog = RotatingLog
     { logInfo    :: MVar LogInfo
     , namePrefix :: String
     , sizeLimit  :: Word64
+    , buffering  :: BufferMode
     , postAction :: FilePath -> IO ()
     }
 
@@ -72,17 +73,29 @@ mkRotatingLog
     -- ^ A prefix for the written log files.
     -> Word64
     -- ^ A size limit in bytes.
+    -> BufferMode
+    -- ^ A buffering mode for output; we leave it to you to decide how
+    -- often the file should be flushed.
     -> (FilePath -> IO ())
     -- ^ An action to be performed on the finished file following
     -- rotation. For example, you could give a callback that moves or
     -- ships the files somewhere else.
     -> IO RotatingLog
-mkRotatingLog pre limit pa = do
-    let fp = curLogFileName pre
-    h <- openFile fp AppendMode
+mkRotatingLog pre limit buf pa = do
+    mvar <- newEmptyMVar
+    let rl = RotatingLog mvar pre limit buf pa
+    h <- openLogFile rl
     len <- hFileSize h
-    mvar <- newMVar $ LogInfo h (fromIntegral len)
-    return $ RotatingLog mvar pre limit pa
+    putMVar mvar $ LogInfo h (fromIntegral len)
+    return rl
+
+
+-------------------------------------------------------------------------------
+openLogFile RotatingLog{..} = do
+    let fp = curLogFileName namePrefix
+    h <- openFile fp AppendMode
+    hSetBuffering h buffering
+    return h
 
 
 ------------------------------------------------------------------------------
@@ -104,14 +117,14 @@ rotatedWrite rlog bs = do
 -- to log non-textual streams such as binary serialized or compressed
 -- content.
 rotatedWrite' :: RotatingLog -> UTCTime -> ByteString -> IO ()
-rotatedWrite' RotatingLog{..} t bs = do
+rotatedWrite' rl@RotatingLog{..} t bs = do
     modifyMVar_ logInfo $ \LogInfo{..} -> do
         (h,b) <- if bytesWritten + len > sizeLimit
                    then do hClose curHandle
                            let newFile = logFileName namePrefix t
                            renameFile curFile newFile
                            postAction newFile
-                           h <- openFile curFile AppendMode
+                           h <- openLogFile rl
                            return (h, 0)
                    else return (curHandle, bytesWritten)
         B.hPutStr h bs
