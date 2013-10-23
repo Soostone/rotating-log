@@ -9,6 +9,7 @@ copyright:           Soostone Inc
 category:            Logging
 build-type:          Simple
 cabal-version:       >= 1.8
+homepage:            http://github.com/Soostone/rotating-log
 
 library
   hs-source-dirs: src
