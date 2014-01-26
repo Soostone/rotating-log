@@ -1,6 +1,7 @@
 name:                rotating-log
 version:             0.2
 description:         Size-limited, concurrent, automatically-rotating log writer for production applications.
+Synopsis:            Size-limited, concurrent, automatically-rotating log writer for production applications.
 license:             BSD3
 license-file:        LICENSE
 author:              Ozgun Ataman, Doug Beardsley
