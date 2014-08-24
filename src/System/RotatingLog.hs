@@ -20,6 +20,7 @@ module System.RotatingLog
   , mkRotatingLog
   , rotatedWrite
   , rotatedWrite'
+  , rotatedClose
 
   -- * Built-In Post-Rotate Actions
   , archiveFile
@@ -107,6 +108,27 @@ rotatedWrite rlog bs = do
     rotatedWrite' rlog t bs
 
 
+-------------------------------------------------------------------------------
+-- | Close the underlying file handle and apply the post-action hook.
+rotatedClose :: RotatingLog -> IO ()
+rotatedClose r = do
+    li <- readMVar (logInfo r)
+    now <- getCurrentTime
+    closeFile r li now
+
+
+-------------------------------------------------------------------------------
+-- | Close current file and apply post action.
+closeFile :: RotatingLog -> LogInfo -> UTCTime -> IO ()
+closeFile RotatingLog{..} LogInfo{..} now = do
+    hClose curHandle
+    let newFile = logFileName namePrefix now
+    renameFile curFile newFile
+    postAction newFile
+  where
+    curFile = curLogFileName namePrefix
+
+
 ------------------------------------------------------------------------------
 -- | Writes ByteString to a rotating log file.  If this write would exceed the
 -- size limit, then the file is closed and a new file opened.  This function
@@ -118,12 +140,9 @@ rotatedWrite rlog bs = do
 -- content.
 rotatedWrite' :: RotatingLog -> UTCTime -> ByteString -> IO ()
 rotatedWrite' rl@RotatingLog{..} t bs = do
-    modifyMVar_ logInfo $ \LogInfo{..} -> do
+    modifyMVar_ logInfo $ \ li@LogInfo{..} -> do
         (h,b) <- if bytesWritten + len > sizeLimit
-                   then do hClose curHandle
-                           let newFile = logFileName namePrefix t
-                           renameFile curFile newFile
-                           postAction newFile
+                   then do closeFile rl li t
                            h <- openLogFile rl
                            return (h, 0)
                    else return (curHandle, bytesWritten)
@@ -131,7 +150,6 @@ rotatedWrite' rl@RotatingLog{..} t bs = do
         return $! LogInfo h (len + b)
   where
     len = fromIntegral $ B.length bs
-    curFile = curLogFileName namePrefix
 
 
 -------------------------------------------------------------------------------
