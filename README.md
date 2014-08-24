@@ -1,4 +1,4 @@
-# rotating-log
+# rotating-log [![Build Status](https://travis-ci.org/Soostone/rotating-log.svg?branch=master)](https://travis-ci.org/Soostone/rotating-log)
 
 ## Description
 
