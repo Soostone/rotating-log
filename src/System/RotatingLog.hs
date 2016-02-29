@@ -36,7 +36,6 @@ import           Data.Word
 import           System.Directory
 import           System.FilePath.Posix
 import           System.IO
-import           System.Locale
 -------------------------------------------------------------------------------
 
 
