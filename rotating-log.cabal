@@ -22,6 +22,8 @@ library
     base               >= 4    && < 5,
     bytestring         >= 0.8,
     time               >= 1.5 && < 1.7,
+    old-locale         >= 1.0,
+    time-locale-compat,
     filepath           >= 1.0,
     directory          >= 1.0
     
