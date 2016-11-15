@@ -1,5 +1,5 @@
 name:                rotating-log
-version:             0.3
+version:             0.4
 description:         Size-limited, concurrent, automatically-rotating log writer.
 Synopsis:            Size-limited, concurrent, automatically-rotating log writer.
 license:             BSD3
@@ -21,8 +21,9 @@ library
   build-depends:       
     base               >= 4    && < 5,
     bytestring         >= 0.8,
+    time               >= 1.5 && < 1.7,
     old-locale         >= 1.0,
-    time               >= 1.1,
+    time-locale-compat,
     filepath           >= 1.0,
     directory          >= 1.0
     
@@ -34,11 +35,10 @@ test-suite test-rotate
   ghc-options: -Wall
   hs-source-dirs: test, src
   build-depends:
-    base               >= 4,
-    bytestring         >= 0.8,
-    old-locale         >= 1.0,
-    time               >= 1.1,
-    filepath           >= 1.0,
-    directory          >= 1.0
+    base,       
+    bytestring,
+    time,      
+    filepath,  
+    directory 
 
   ghc-options: -Wall -fwarn-tabs -threaded

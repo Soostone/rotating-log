@@ -32,11 +32,11 @@ import           Control.Concurrent.MVar
 import           Data.ByteString.Char8   (ByteString)
 import qualified Data.ByteString.Char8   as B
 import           Data.Time
+import qualified Data.Time.Locale.Compat as LC
 import           Data.Word
 import           System.Directory
 import           System.FilePath.Posix
 import           System.IO
-import           System.Locale
 -------------------------------------------------------------------------------
 
 
@@ -64,7 +64,7 @@ curLogFileName = (++".log")
 
 logFileName :: String -> UTCTime -> FilePath
 logFileName pre t = concat
-    [pre, "_", formatTime defaultTimeLocale "%Y_%m_%d_%H_%M_%S%Q" t, ".log"]
+    [pre, "_", formatTime LC.defaultTimeLocale "%Y_%m_%d_%H_%M_%S%Q" t, ".log"]
 
 
 ------------------------------------------------------------------------------
