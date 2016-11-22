@@ -42,6 +42,7 @@ test-suite test-rotate
     base,
     bytestring,
     time,
+    time-locale-compat,
     filepath,
     directory
 
