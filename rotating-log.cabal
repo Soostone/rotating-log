@@ -47,3 +47,7 @@ test-suite test-rotate
     directory
 
   ghc-options: -Wall -fwarn-tabs -threaded
+
+source-repository head
+  type:     git
+  location: git://github.com/Soostone/rotating-log.git
