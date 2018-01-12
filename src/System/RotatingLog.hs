@@ -92,6 +92,7 @@ mkRotatingLog pre limit buf pa = do
 
 
 -------------------------------------------------------------------------------
+openLogFile :: RotatingLog -> IO Handle
 openLogFile RotatingLog{..} = do
     let fp = curLogFileName namePrefix
     h <- openFile fp AppendMode
