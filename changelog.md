@@ -1,3 +1,5 @@
+0.4.3
+* Widen dependencies.
 0.4.2
 * Add missing time-locale-compat dependency for test suite.
 0.4.1
