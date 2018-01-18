@@ -5,3 +5,4 @@ dist
 TAGS
 *DS_*
 *.log
+.stack-work
